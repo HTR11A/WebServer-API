@@ -5,10 +5,12 @@ from wtforms.validators import DataRequired
 import string
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'key'
 
 
 class MessageForm(FlaskForm):
-    mode = RadioField('Mode', choices=[('encode', 'Encode'), ('decode', 'Decode')], default='encode')
+    mode = RadioField('Режим', choices=[('encode', 'Зашифровать'), ('decode', 'Расшифровать')],
+                      default='encode')
     message = StringField('Сообщение', validators=[DataRequired()])
     key = StringField('Ключ')
     submit = SubmitField('Отправить')

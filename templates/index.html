@@ -4,7 +4,7 @@
     <title>Шифратор сообщений</title>
 </head>
 <body>
-    <h1>{{ 'Зашифровать' if form.mode.data == 'encode' else 'Расшифровать' }} Message</h1>
+    <h1>{{ 'Зашифровать' if form.mode.data == 'encode' else 'Расшифровать' }} Сообщение</h1>
     <form method="POST">
         {{ form.hidden_tag() }}
         <p>
