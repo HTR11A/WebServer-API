@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Шифратор сообщений</title>
+</head>
+<body>
+    <h1>{{ 'Зашифровать' if form.mode.data == 'encode' else 'Расшифровать' }} Message</h1>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        <p>
+            {{ form.mode.label }}<br>
+            {{ form.mode }}
+        </p>
+        <p>
+            {{ form.message.label }}<br>
+            {{ form.message(size=32) }}
+        </p>
+        <p>
+            {{ form.key.label }}<br>
+            {{ form.key(size=32) }}
+        </p>
+        <p>{{ form.submit() }}</p>
+    </form>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+</body>
+</html>
