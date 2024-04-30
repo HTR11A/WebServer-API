@@ -8,12 +8,13 @@ import string
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'key'
 
-class MessageForm(FlaskForm):
-    mode = RadioField('Mode', choices=[('encode', 'Encode'), ('decode', 'Decode')], default='encode')
-    message = StringField('Message', validators=[DataRequired()])
-    key = StringField('Key (for decoding only)', validators=[])
-    submit = SubmitField('Submit')
 
+class MessageForm(FlaskForm):
+    mode = RadioField('Режим', choices=[('encode', 'Зашифровать'), ('decode', 'Расшифровать')],
+                      default='encode')
+    message = StringField('Сообщение', validators=[DataRequired()])
+    key = StringField('Ключ')
+    submit = SubmitField('Отправить')
 
 def generate_key(length=16):
     return ''.join(secrets.choice(string.ascii_uppercase) for _ in range(length))
