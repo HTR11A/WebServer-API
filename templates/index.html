@@ -1,32 +1,31 @@
-<!DOCTYPE html>
 <html>
 <head>
     <title>Шифратор сообщений</title>
+    <script type="text/javascript">
+        function toggleKeyInput() {
+            var mode = document.querySelector('input[name="mode"]:checked').value;
+            var keyField = document.getElementById('keyField');
+            keyField.style.display = (mode === 'decode') ? 'block' : 'none';
+        }
+    </script>
 </head>
-<body>
-    <h1>{{ 'Зашифровать' if form.mode.data == 'encode' else 'Расшифровать' }} Message</h1>
+<body onload="toggleKeyInput()">
+    <h1>{{ 'Зашифровать' if form.mode.data == 'encode' else 'Расшифровать' }} Сообщение</h1>
     <form method="POST">
         {{ form.hidden_tag() }}
         <p>
             {{ form.mode.label }}<br>
-            {{ form.mode }}
+            {{ form.mode(onchange="toggleKeyInput()") }}
         </p>
         <p>
             {{ form.message.label }}<br>
             {{ form.message(size=32) }}
         </p>
-        <p>
+        <div id="keyField" style="{{ 'display:none;' if form.mode.data == 'encode' else 'display:block;' }}">
             {{ form.key.label }}<br>
             {{ form.key(size=32) }}
-        </p>
+        </div>
         <p>{{ form.submit() }}</p>
     </form>
     {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="{{ category }}">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
     {% endwith %}
-</body>
-</html>
