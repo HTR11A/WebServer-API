@@ -1,52 +1,80 @@
-from flask import Flask, render_template, redirect, url_for, flash
-from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, RadioField
-from wtforms.validators import DataRequired
+import secrets
+from flask import Flask, request, jsonify
 import string
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'key'
 
 
-class MessageForm(FlaskForm):
-    mode = RadioField('Режим', choices=[('encode', 'Зашифровать'), ('decode', 'Расшифровать')],
-                      default='encode')
-    message = StringField('Сообщение', validators=[DataRequired()])
-    key = StringField('Ключ')
-    submit = SubmitField('Отправить')
+def generate_key(length=16):
+    return ''.join(secrets.choice(string.ascii_uppercase) for _ in range(length))
 
 
-def caesar_cipher(text, shift, encode=True):
-    alphabet = string.ascii_lowercase
-    shifted_alphabet = alphabet[shift:] + alphabet[:shift]
-    if encode:
-        table = str.maketrans(alphabet, shifted_alphabet)
+def symbol_shift(symbol, key_symbol, encrypt=True):
+    num_letters = 26 if ('a' <= symbol <= 'z' or 'A' <= symbol <= 'Z') else 32
+
+    if symbol.islower():
+        base = ord('a') if 'a' <= symbol <= 'z' else ord('а')
+    elif symbol.isupper():
+        base = ord('A') if 'A' <= symbol <= 'Z' else ord('А')
     else:
-        table = str.maketrans(shifted_alphabet, alphabet)
-    return text.translate(table)
+        return symbol
+
+    if key_symbol.islower():
+        key_base = ord('a') if 'a' <= key_symbol <= 'z' else ord('а')
+    elif key_symbol.isupper():
+        key_base = ord('A') if 'A' <= key_symbol <= 'Z' else ord('А')
+
+    key_offset = ord(key_symbol) - key_base
+    if not encrypt:
+        key_offset = -key_offset
+
+    new_symbol = chr((ord(symbol) - base + key_offset) % num_letters + base)
+    return new_symbol
 
 
-@app.route('/', methods=['GET', 'POST'])
-def index():
-    form = MessageForm()
-    if form.validate_on_submit():
-        mode = form.mode.data
-        message = form.message.data
-        key = form.key.data
+def vigenere_cipher(text, key, encrypt=True):
+    result = []
+    key_index = 0
 
-        try:
-            shift = int(key) if mode == 'decode' else 3
-            result = caesar_cipher(message.lower(), shift, encode=(mode == 'encode'))
-            if mode == 'encode':
-                flash(f'Encoded message: {result}, Key: {shift}', 'success')
+    for symbol in text:
+        if symbol.isalpha():
+            key_symbol = key[key_index % len(key)]
+            if symbol.isalpha() and key_symbol.isalpha():
+                result_char = symbol_shift(symbol, key_symbol, encrypt)
+                result.append(result_char)
+                key_index += 1
             else:
-                flash(f'Decoded message: {result}', 'success')
-        except ValueError:
-            flash('Неверный ключ', 'error')
+                result.append(symbol)
+        else:
+            result.append(symbol)
 
-        return redirect(url_for('index'))
+    return ''.join(result)
 
-    return render_template('index.html', form=form)
+
+def encrypt(message, key):
+    return vigenere_cipher(message, key, encrypt=True)
+
+
+def decrypt(message, key):
+    return vigenere_cipher(message, key, encrypt=False)
+
+
+@app.route('/encode', methods=['POST'])
+def encode():
+    data = request.json
+    message = data['message']
+    key = generate_key()
+    encoded_message = encrypt(message, key)
+    return jsonify({'encoded_message': encoded_message, 'key': key})
+
+
+@app.route('/decode', methods=['POST'])
+def decode():
+    data = request.json
+    message = data['message']
+    key = data['key']
+    decoded_message = decrypt(message, key)
+    return jsonify({'decoded_message': decoded_message})
 
 
 if __name__ == '__main__':
